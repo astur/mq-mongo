@@ -16,15 +16,20 @@ const DB = mongo.connect(mongoString)
         process.exit(1);
     });
 
-test.serial('default', async t => {
+test.serial('add', async t => {
     const db = await DB;
     await db.collection('mq').remove({});
-    await mq(DB);
+    const q = mq(DB);
     t.is(await db.collection('mq').count(), 0);
+    const result = await q.add('test');
+    t.is(result.length, 1);
+    t.is(typeof result[0], 'string');
+    t.is(await db.collection('mq').count(), 1);
+    t.is((await db.collection('mq').findOne({})).data, 'test');
 });
 
 test.after(async t => {
     const db = await DB;
-    // await db.dropCollection('mq');
+    await db.dropCollection('mq');
     await db.close();
 });
