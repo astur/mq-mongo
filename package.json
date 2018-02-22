@@ -18,7 +18,8 @@
   "devDependencies": {
     "ava": "^0.22.0",
     "eslint": "^4.7.2",
-    "eslint-config-astur": "0.0.2"
+    "eslint-config-astur": "0.0.2",
+    "mongodb": "^3.0.2"
   },
   "keywords": [
     "mq-mongo"
