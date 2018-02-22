@@ -28,6 +28,21 @@ test.serial('add', async t => {
     t.is((await db.collection('mq').findOne({})).data, 'test');
 });
 
+test.serial('get', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB);
+    t.is(await db.collection('mq').count(), 0);
+    await q.add('test1');
+    await q.add('test2');
+    t.deepEqual([
+        await q.get(),
+        await q.get(),
+        await q.get(),
+    ].map(v => v === null ? v : v.data), ['test1', 'test2', null]);
+    t.is(await db.collection('mq').count(), 2);
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
