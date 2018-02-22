@@ -4,6 +4,7 @@ module.exports = (db, {
     tries = 10,
 } = {}) => {
     const after = (ttl = 0) => Date.now() + ttl;
+    const id = () => require('crypto').randomBytes(16).toString('hex');
     db = (async () => {
         const _db = await db;
         // Here will be indexes, cleanups, inits, etc.
@@ -23,7 +24,30 @@ module.exports = (db, {
             const result = await _db.collection('mq').insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
-        get: async () => {},
+        get: async (t = ttl) => {
+            const _db = await db;
+            const result = await _db.collection('mq').findOneAndUpdate(
+                {
+                    expires: {$lte: after()},
+                    tries: {$lte: tries},
+                },
+                {
+                    $inc: {tries: 1},
+                    $set: {
+                        tag: id(),
+                        expires: after(ttl),
+                    },
+                },
+                {
+                    returnOriginal: false,
+                    sort: {
+                        expires: 1,
+                        created: 1,
+                    },
+                },
+            );
+            return result.value;
+        },
         ack: async () => {},
         ping: async () => {},
     };
