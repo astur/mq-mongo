@@ -48,7 +48,14 @@ module.exports = (db, {
             );
             return result.value;
         },
-        ack: async () => {},
+        ack: async tag => {
+            const _db = await db;
+            const result = await _db.collection('mq').findOneAndDelete({
+                tag,
+                expires: {$gt: after()},
+            });
+            return result.value ? `${result.value._id}` : result.value;
+        },
         ping: async () => {},
     };
 };
