@@ -35,12 +35,18 @@ test.serial('get', async t => {
     t.is(await db.collection('mq').count(), 0);
     await q.add('test1');
     await q.add('test2');
-    t.deepEqual([
-        await q.get(),
-        await q.get(),
-        await q.get(),
-    ].map(v => v === null ? v : v.data), ['test1', 'test2', null]);
-    t.is(await db.collection('mq').count(), 2);
+    await q.add('test3');
+    t.deepEqual(
+        [
+            await q.get(1),
+            await q.get(),
+            await q.get(),
+            await q.get(),
+            await q.get(),
+        ].map(v => v === null ? v : v.data),
+        ['test1', 'test2', 'test3', 'test1', null],
+    );
+    t.is(await db.collection('mq').count(), 3);
 });
 
 test.after(async t => {
