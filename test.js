@@ -49,6 +49,22 @@ test.serial('get', async t => {
     t.is(await db.collection('mq').count(), 3);
 });
 
+test.serial('ack', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB);
+    t.is(await db.collection('mq').count(), 0);
+    await q.add('test');
+    const msg1 = await q.get(1);
+    t.is(msg1.data, 'test');
+    t.is(await q.ack(msg1.tag), null);
+    t.is(await db.collection('mq').count(), 1);
+    const msg2 = await q.get();
+    t.is(msg2.data, 'test');
+    t.is(typeof await q.ack(msg2.tag), 'string');
+    t.is(await db.collection('mq').count(), 0);
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
