@@ -35,7 +35,7 @@ module.exports = (db, {
                     $inc: {tries: 1},
                     $set: {
                         tag: id(),
-                        expires: after(ttl),
+                        expires: after(t),
                     },
                 },
                 {
