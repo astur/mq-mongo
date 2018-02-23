@@ -28,6 +28,7 @@ q.get().then(msg => {/* Do something */});
 * __`options.tries`__ - just how many times single message may be taken and returned to queue without ack. Defaults to 10.
 * __`options.clean`__ - if `true` previous messages in this queue (in fact documents in collection) will be deleted. Defaults to `false`.
 * __`options.insistent`__ - if `true` then `get` will begins from last failed (returned to queue without ack) messages. If `false` then `get` follow 'FIFO' rule.
+* __`options.items`__ - message or array of messages for adding to queue on start.
 
 #### methods (all asinc)
 
