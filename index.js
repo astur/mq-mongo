@@ -2,6 +2,7 @@ module.exports = (db, {
     name = 'mq',
     ttl = 30000,
     tries = 10,
+    clean = false,
 } = {}) => {
     const after = (ttl = 0) => Date.now() + ttl;
     const id = () => require('crypto').randomBytes(16).toString('hex');
@@ -9,6 +10,7 @@ module.exports = (db, {
         const _db = await db;
         await _db.collection(name).createIndex({expires: 1, created: 1});
         await _db.collection(name).createIndex({tag: 1}, {unique: true, sparse: true});
+        if(clean) await _db.collection(name).deleteMany({});
         // Here will be cleanups, inits, etc.
         return _db;
     })();
