@@ -3,6 +3,7 @@ module.exports = (db, {
     ttl = 30000,
     tries = 10,
     clean = false,
+    insistent = false,
 } = {}) => {
     const after = (ttl = 0) => Date.now() + ttl;
     const id = () => require('crypto').randomBytes(16).toString('hex');
@@ -39,7 +40,7 @@ module.exports = (db, {
                 {
                     returnOriginal: false,
                     sort: {
-                        expires: 1,
+                        expires: insistent ? -1 : 1,
                         created: 1,
                     },
                 },
