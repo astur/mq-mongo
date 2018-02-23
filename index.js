@@ -65,5 +65,15 @@ module.exports = (db, {
             );
             return result.value;
         },
+        total: async () => (await db).collection(name).count(),
+        waiting: async () => (await db).collection(name).count(Object.assign(
+            {expires: {$lte: after()}},
+            tries === null ? {} : {tries: {$lt: tries}},
+        )),
+        active: async () => (await db).collection(name).count(Object.assign(
+            {expires: {$gt: after()}},
+            tries === null ? {} : {tries: {$lt: tries}},
+        )),
+        failed: async () => (await db).collection(name).count({$or: [{tries: {$gte: tries}}, {tries: null}]}),
     };
 };
