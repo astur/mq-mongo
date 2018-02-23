@@ -56,6 +56,17 @@ module.exports = (db, {
             });
             return result.value ? `${result.value._id}` : result.value;
         },
-        ping: async () => {},
+        ping: async (tag, t = ttl) => {
+            const _db = await db;
+            const result = await _db.collection('mq').findOneAndUpdate(
+                {
+                    tag,
+                    expires: {$gt: after()},
+                },
+                {$set: {expires: after(t)}},
+                {returnOriginal: false},
+            );
+            return result.value;
+        },
     };
 };
