@@ -89,6 +89,17 @@ test.serial('name', async t => {
     t.is(msg.data, 'test');
 });
 
+test.serial('tries', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB, {tries: 1});
+    await q.add('test');
+    t.is(await db.collection('mq').count(), 1);
+    t.is((await q.get(100)).data, 'test');
+    await delay(200);
+    t.is(await q.get(100), null);
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
