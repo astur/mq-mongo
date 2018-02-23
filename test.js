@@ -78,8 +78,20 @@ test.serial('ping', async t => {
     t.is(await q.ping(msg.tag, 1), null);
 });
 
+test.serial('name', async t => {
+    const db = await DB;
+    await db.collection('named').remove({});
+    const q = mq(DB, {name: 'named'});
+    await q.add('test');
+    t.is(await db.collection('named').count(), 1);
+    t.is((await db.collection('named').findOne({})).data, 'test');
+    const msg = await q.get();
+    t.is(msg.data, 'test');
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
+    await db.dropCollection('named');
     await db.close();
 });
