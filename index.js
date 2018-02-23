@@ -20,6 +20,7 @@ module.exports = (db, {
                     {data: item, created: after(), expires: 0},
                     tries === null ? {} : {tries: 0},
                 ));
+            if(!items.length) return [];
             const result = await (await db).collection(name).insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
