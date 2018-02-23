@@ -34,12 +34,12 @@ test.serial('get', async t => {
     await db.collection('mq').remove({});
     const q = mq(DB);
     t.is(await db.collection('mq').count(), 0);
-    await q.add('test1');
-    await q.add('test2');
+    await q.add('test1').then(delay(10));
+    await q.add('test2').then(delay(10));
     await q.add('test3');
     t.deepEqual(
         [
-            await q.get(1),
+            await q.get(1).then(delay(10)),
             await q.get(),
             await q.get(),
             await q.get(),
