@@ -1,6 +1,6 @@
 {
   "name": "mq-mongo",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Easy message queue on mongo",
   "main": "index.js",
   "author": "astur <astur@yandex.ru> (http://kozlov.am/)",
