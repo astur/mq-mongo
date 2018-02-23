@@ -100,6 +100,18 @@ test.serial('tries', async t => {
     t.is(await q.get(100), null);
 });
 
+test.serial('ttl', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB, {ttl: 100});
+    await q.add('test');
+    t.is(await db.collection('mq').count(), 1);
+    t.is((await q.get()).data, 'test');
+    await delay(200);
+    t.is((await q.get()).data, 'test');
+    t.is(await q.get(), null);
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
