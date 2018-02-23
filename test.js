@@ -58,6 +58,7 @@ test.serial('ack', async t => {
     await q.add('test');
     const msg1 = await q.get(1);
     t.is(msg1.data, 'test');
+    await delay(10);
     t.is(await q.ack(msg1.tag), null);
     t.is(await db.collection('mq').count(), 1);
     const msg2 = await q.get();
