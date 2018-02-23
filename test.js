@@ -119,7 +119,6 @@ test.serial('null-tries', async t => {
     const q = mq(DB, {tries: null});
     await q.add('test');
     t.is(await db.collection('mq').count(), 1);
-    t.is((await q.get(1).then(delay(10))).data, 'test');
     await q.get(1).then(delay(10));
     await q.get(1).then(delay(10));
     await q.get(1).then(delay(10));
@@ -130,11 +129,12 @@ test.serial('null-tries', async t => {
     await q.get(1).then(delay(10));
     await q.get(1).then(delay(10));
     t.is((await q.get(1).then(delay(10))).tries, undefined);
+    t.is((await q.get(1).then(delay(10))).data, 'test');
 });
 
 test.after(async t => {
     const db = await DB;
-    // await db.dropCollection('mq');
-    // await db.dropCollection('named');
+    await db.dropCollection('mq');
+    await db.dropCollection('named');
     await db.close();
 });
