@@ -12,7 +12,6 @@ module.exports = (db, {
     })();
     return {
         add: async items => {
-            const _db = await db;
             if([null, undefined].includes(items)) return [];
             items = (Array.isArray(items) ? items : [items])
                 .map(item => ({
@@ -21,12 +20,11 @@ module.exports = (db, {
                     expires: 0,
                     tries: 0,
                 }));
-            const result = await _db.collection('mq').insertMany(items);
+            const result = await (await db).collection('mq').insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
         get: async (t = ttl) => {
-            const _db = await db;
-            const result = await _db.collection('mq').findOneAndUpdate(
+            const result = await (await db).collection('mq').findOneAndUpdate(
                 {
                     expires: {$lte: after()},
                     tries: {$lte: tries},
@@ -49,16 +47,14 @@ module.exports = (db, {
             return result.value;
         },
         ack: async tag => {
-            const _db = await db;
-            const result = await _db.collection('mq').findOneAndDelete({
+            const result = await (await db).collection('mq').findOneAndDelete({
                 tag,
                 expires: {$gt: after()},
             });
             return result.value ? `${result.value._id}` : result.value;
         },
         ping: async (tag, t = ttl) => {
-            const _db = await db;
-            const result = await _db.collection('mq').findOneAndUpdate(
+            const result = await (await db).collection('mq').findOneAndUpdate(
                 {
                     tag,
                     expires: {$gt: after()},
