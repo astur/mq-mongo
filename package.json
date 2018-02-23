@@ -1,8 +1,7 @@
 {
-  "private": true,
   "name": "mq-mongo",
   "version": "0.0.0",
-  "description": "",
+  "description": "Easy message queue on mongo",
   "main": "index.js",
   "author": "astur <astur@yandex.ru> (http://kozlov.am/)",
   "scripts": {
@@ -23,7 +22,9 @@
     "mongodb": "^3.0.2"
   },
   "keywords": [
-    "mq-mongo"
+    "mongo",
+    "mq",
+    "queue"
   ],
   "license": "MIT"
 }
