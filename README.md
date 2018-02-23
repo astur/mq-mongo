@@ -35,6 +35,10 @@ q.get().then(msg => {/* Do something */});
 * __`q.get(ttl)`__ - gets message from queue. Optional parameter is individual `ttl` for that specific message. Returns message object or `null` (if no messages ready).
 * __`q.ack(tag)`__ - deletes successfully handled message (specified by tag field) from queue. Returns `_id` string of deleted message or null (if no message with such tag or if ttl expires).
 * __`q.ping(tag, ttl)`__ - prolong ttl of message specified by tag field. Optional parameter `ttl` defaults to `options.ttl` of queue.
+* __`q.waiting()`__ - returns quantity of messages in queue.
+* __`q.active()`__ - returns quantity of messages in work (waiting for ack).
+* __`q.failed()`__ - returns quantity of failed messages (all tries is over).
+* __`q.total()`__ - returns total quantity of messages (sum of three above).
 
 #### message fields
 
