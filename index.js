@@ -7,7 +7,9 @@ module.exports = (db, {
     const id = () => require('crypto').randomBytes(16).toString('hex');
     db = (async () => {
         const _db = await db;
-        // Here will be indexes, cleanups, inits, etc.
+        await _db.collection(name).createIndex({expires: 1, created: 1});
+        await _db.collection(name).createIndex({tag: 1}, {unique: true, sparse: true});
+        // Here will be cleanups, inits, etc.
         return _db;
     })();
     return {
