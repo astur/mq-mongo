@@ -4,26 +4,33 @@ module.exports = (db, {
     tries = 10,
     clean = false,
     insistent = false,
+    items = null,
 } = {}) => {
     const after = (ttl = 0) => Date.now() + ttl;
     const id = () => require('crypto').randomBytes(16).toString('hex');
+    const prepare = items => {
+        if([null, undefined].includes(items)) return null;
+        items = (Array.isArray(items) ? items : [items])
+            .map(item => Object.assign(
+                {data: item, created: after(), expires: 0},
+                tries === null ? {} : {tries: 0},
+            ));
+        if(!items.length) return null;
+        return items;
+    };
     db = (async () => {
         const _db = await db;
         await _db.collection(name).createIndex({expires: 1, created: 1});
         await _db.collection(name).createIndex({tag: 1}, {unique: true, sparse: true});
         if(clean) await _db.collection(name).deleteMany({});
-        // Here will be cleanups, inits, etc.
+        items = prepare(items);
+        if(items !== null) await _db.collection(name).insertMany(items);
         return _db;
     })();
     return {
         add: async items => {
-            if([null, undefined].includes(items)) return [];
-            items = (Array.isArray(items) ? items : [items])
-                .map(item => Object.assign(
-                    {data: item, created: after(), expires: 0},
-                    tries === null ? {} : {tries: 0},
-                ));
-            if(!items.length) return [];
+            items = prepare(items);
+            if(items === null) return [];
             const result = await (await db).collection(name).insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
