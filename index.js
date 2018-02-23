@@ -20,11 +20,11 @@ module.exports = (db, {
                     expires: 0,
                     tries: 0,
                 }));
-            const result = await (await db).collection('mq').insertMany(items);
+            const result = await (await db).collection(name).insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
         get: async (t = ttl) => {
-            const result = await (await db).collection('mq').findOneAndUpdate(
+            const result = await (await db).collection(name).findOneAndUpdate(
                 {
                     expires: {$lte: after()},
                     tries: {$lte: tries},
@@ -47,14 +47,14 @@ module.exports = (db, {
             return result.value;
         },
         ack: async tag => {
-            const result = await (await db).collection('mq').findOneAndDelete({
+            const result = await (await db).collection(name).findOneAndDelete({
                 tag,
                 expires: {$gt: after()},
             });
             return result.value ? `${result.value._id}` : result.value;
         },
         ping: async (tag, t = ttl) => {
-            const result = await (await db).collection('mq').findOneAndUpdate(
+            const result = await (await db).collection(name).findOneAndUpdate(
                 {
                     tag,
                     expires: {$gt: after()},
