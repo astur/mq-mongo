@@ -135,6 +135,15 @@ test.serial('null-tries', async t => {
     t.is((await q.get(1).then(delay(10))).data, 'test');
 });
 
+test.serial('clean', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    await db.collection('mq').insertMany([{}, {}, {}]);
+    const q = mq(DB, {clean: true});
+    await q.get();
+    t.is(await db.collection('mq').count(), 0);
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
