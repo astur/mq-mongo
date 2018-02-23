@@ -155,6 +155,26 @@ test.serial('insistent', async t => {
     t.is((await q.get(1)).data, 'test1');
 });
 
+test.serial('size', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB, {tries: 1});
+    await q.add('test1').then(delay(10));
+    await q.add('test2');
+    t.is(await q.total(), 2);
+    t.is(await q.waiting(), 2);
+    t.is(await q.active(), 0);
+    t.is(await q.failed(), 0);
+    await q.get(1).then(delay(10));
+    t.is(await q.waiting(), 1);
+    t.is(await q.failed(), 1);
+    const msg = await q.get();
+    await q.ack(msg.tag);
+    t.is(await q.total(), 1);
+    t.is(await q.waiting(), 0);
+    t.is(await q.active(), 0);
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
