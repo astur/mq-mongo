@@ -175,6 +175,14 @@ test.serial('size', async t => {
     t.is(await q.active(), 0);
 });
 
+test.serial('init items', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB, {items: ['test1', 'test2']});
+    t.is(await q.total(), 2);
+    t.is(await q.waiting(), 2);
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
