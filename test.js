@@ -144,6 +144,17 @@ test.serial('clean', async t => {
     t.is(await db.collection('mq').count(), 0);
 });
 
+test.serial('insistent', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB, {insistent: true});
+    await q.add('test1').then(delay(10));
+    await q.add('test2');
+    t.is((await q.get(1)).data, 'test1');
+    await delay(10);
+    t.is((await q.get(1)).data, 'test1');
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
