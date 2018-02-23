@@ -1,4 +1,5 @@
 const test = require('ava');
+const delay = require('delay');
 const mq = require('.');
 
 const mongo = require('mongodb').MongoClient;
@@ -63,6 +64,18 @@ test.serial('ack', async t => {
     t.is(msg2.data, 'test');
     t.is(typeof await q.ack(msg2.tag), 'string');
     t.is(await db.collection('mq').count(), 0);
+});
+
+test.serial('ping', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB);
+    t.is(await db.collection('mq').count(), 0);
+    await q.add('test');
+    const msg = await q.get();
+    t.is((await q.ping(msg.tag, 1)).data, 'test');
+    await delay(100);
+    t.is(await q.ping(msg.tag, 1), null);
 });
 
 test.after(async t => {
