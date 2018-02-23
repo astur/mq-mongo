@@ -27,6 +27,9 @@ test.serial('add', async t => {
     t.is(typeof result[0], 'string');
     t.is(await db.collection('mq').count(), 1);
     t.is((await db.collection('mq').findOne({})).data, 'test');
+    t.deepEqual(await q.add(), []);
+    t.deepEqual(await q.add(null), []);
+    t.deepEqual(await q.add([]), []);
 });
 
 test.serial('get', async t => {
