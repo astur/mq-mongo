@@ -27,7 +27,7 @@ module.exports = (db, {
             const result = await (await db).collection(name).findOneAndUpdate(
                 {
                     expires: {$lte: after()},
-                    tries: {$lte: tries},
+                    tries: {$lt: tries},
                 },
                 {
                     $inc: {tries: 1},
