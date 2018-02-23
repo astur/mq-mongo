@@ -16,28 +16,23 @@ module.exports = (db, {
         add: async items => {
             if([null, undefined].includes(items)) return [];
             items = (Array.isArray(items) ? items : [items])
-                .map(item => ({
-                    data: item,
-                    created: after(),
-                    expires: 0,
-                    tries: 0,
-                }));
+                .map(item => Object.assign(
+                    {data: item, created: after(), expires: 0},
+                    tries === null ? {} : {tries: 0},
+                ));
             const result = await (await db).collection(name).insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
         get: async (t = ttl) => {
             const result = await (await db).collection(name).findOneAndUpdate(
-                {
-                    expires: {$lte: after()},
-                    tries: {$lt: tries},
-                },
-                {
-                    $inc: {tries: 1},
-                    $set: {
-                        tag: id(),
-                        expires: after(t),
-                    },
-                },
+                Object.assign(
+                    {expires: {$lte: after()}},
+                    tries === null ? {} : {tries: {$lt: tries}},
+                ),
+                Object.assign(
+                    {$set: {tag: id(), expires: after(t)}},
+                    tries === null ? {} : {$inc: {tries: 1}},
+                ),
                 {
                     returnOriginal: false,
                     sort: {
