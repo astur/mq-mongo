@@ -26,6 +26,8 @@ q.get().then(msg => {/* Do something */});
 * __`options.name`__ - name of mongo collection for queue. Defaults to `'mq'`.
 * __`options.ttl`__ - time-to-live (ms) for taken message before it will be acked or returned to queue. Defaults to 30000.
 * __`options.tries`__ - just how many times single message may be taken and returned to queue without ack. Defaults to 10.
+* __`options.clean`__ - if `true` previous messages in this queue (in fact documents in collection) will be deleted. Defaults to `false`.
+* __`options.insistent`__ - if `true` then `get` will begins from last failed (returned to queue without ack) messages. If `false` then `get` follow 'FIFO' rule.
 
 #### methods (all asinc)
 
