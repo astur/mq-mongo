@@ -113,9 +113,28 @@ test.serial('ttl', async t => {
     t.is(await q.get(), null);
 });
 
+test.serial('null-tries', async t => {
+    const db = await DB;
+    await db.collection('mq').remove({});
+    const q = mq(DB, {tries: null});
+    await q.add('test');
+    t.is(await db.collection('mq').count(), 1);
+    t.is((await q.get(1).then(delay(10))).data, 'test');
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    t.is((await q.get(1).then(delay(10))).tries, undefined);
+});
+
 test.after(async t => {
     const db = await DB;
-    await db.dropCollection('mq');
-    await db.dropCollection('named');
+    // await db.dropCollection('mq');
+    // await db.dropCollection('named');
     await db.close();
 });
