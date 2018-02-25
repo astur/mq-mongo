@@ -18,22 +18,22 @@ const DB = mongo.connect(mongoString)
     });
 
 test.serial('add', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB);
     const result = await q.add('test');
     t.is(result.length, 1);
     t.is(typeof result[0], 'string');
-    t.is(await db.collection('mq').count(), 1);
-    t.is((await db.collection('mq').findOne({})).data, 'test');
+    t.is(await coll.count(), 1);
+    t.is((await coll.findOne({})).data, 'test');
     t.deepEqual(await q.add(), []);
     t.deepEqual(await q.add(null), []);
     t.deepEqual(await q.add([]), []);
 });
 
 test.serial('get', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB);
     await q.add('test1').then(delay(10));
     await q.add('test2').then(delay(10));
@@ -48,28 +48,28 @@ test.serial('get', async t => {
         ].map(v => v === null ? v : v.data),
         ['test1', 'test2', 'test3', 'test1', null],
     );
-    t.is(await db.collection('mq').count(), 3);
+    t.is(await coll.count(), 3);
 });
 
 test.serial('ack', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB);
     await q.add('test');
     const msg1 = await q.get(1);
     t.is(msg1.data, 'test');
     await delay(10);
     t.is(await q.ack(msg1.tag), null);
-    t.is(await db.collection('mq').count(), 1);
+    t.is(await coll.count(), 1);
     const msg2 = await q.get();
     t.is(msg2.data, 'test');
     t.is(typeof await q.ack(msg2.tag), 'string');
-    t.is(await db.collection('mq').count(), 0);
+    t.is(await coll.count(), 0);
 });
 
 test.serial('ping', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB);
     await q.add('test');
     const msg = await q.get();
@@ -79,33 +79,33 @@ test.serial('ping', async t => {
 });
 
 test.serial('name', async t => {
-    const db = await DB;
-    await db.collection('named').remove({});
+    const coll = (await DB).collection('named');
+    await coll.remove({});
     const q = mq(DB, {name: 'named'});
     await q.add('test');
-    t.is(await db.collection('named').count(), 1);
-    t.is((await db.collection('named').findOne({})).data, 'test');
+    t.is(await coll.count(), 1);
+    t.is((await coll.findOne({})).data, 'test');
     const msg = await q.get();
     t.is(msg.data, 'test');
 });
 
 test.serial('tries', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB, {tries: 1});
     await q.add('test');
     t.is((await q.get(100)).data, 'test');
     await delay(200);
     t.is(await q.get(100), null);
-    t.is(await db.collection('mq').count(), 1);
+    t.is(await coll.count(), 1);
 });
 
 test.serial('ttl', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB, {ttl: 100});
     await q.add('test');
-    t.is(await db.collection('mq').count(), 1);
+    t.is(await coll.count(), 1);
     t.is((await q.get()).data, 'test');
     await delay(200);
     t.is((await q.get()).data, 'test');
@@ -113,11 +113,11 @@ test.serial('ttl', async t => {
 });
 
 test.serial('null-tries', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB, {tries: null});
     await q.add('test');
-    t.is(await db.collection('mq').count(), 1);
+    t.is(await coll.count(), 1);
     await q.get(1).then(delay(10));
     await q.get(1).then(delay(10));
     await q.get(1).then(delay(10));
@@ -132,17 +132,17 @@ test.serial('null-tries', async t => {
 });
 
 test.serial('clean', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
-    await db.collection('mq').insertMany([{}, {}, {}]);
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
+    await coll.insertMany([{}, {}, {}]);
     const q = mq(DB, {clean: true});
     await q.get();
-    t.is(await db.collection('mq').count(), 0);
+    t.is(await coll.count(), 0);
 });
 
 test.serial('insistent', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB, {insistent: true});
     await q.add('test1').then(delay(10));
     await q.add('test2');
@@ -152,8 +152,8 @@ test.serial('insistent', async t => {
 });
 
 test.serial('size', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB, {tries: 1});
     await q.add('test1').then(delay(10));
     await q.add('test2');
@@ -172,8 +172,8 @@ test.serial('size', async t => {
 });
 
 test.serial('init items', async t => {
-    const db = await DB;
-    await db.collection('mq').remove({});
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
     const q = mq(DB, {items: ['test1', 'test2']});
     t.is(await q.total(), 2);
     t.is(await q.waiting(), 2);
