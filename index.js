@@ -34,44 +34,35 @@ module.exports = (db, {
             const result = await (await coll).insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
-        get: async (t = ttl) => {
-            const result = await (await coll).findOneAndUpdate(
-                Object.assign(
-                    {expires: {$lte: after()}},
-                    tries === null ? {} : {tries: {$lt: tries}},
-                ),
-                Object.assign(
-                    {$set: {tag: id(), expires: after(t)}},
-                    tries === null ? {} : {$inc: {tries: 1}},
-                ),
-                {
-                    returnOriginal: false,
-                    sort: {
-                        expires: insistent ? -1 : 1,
-                        created: 1,
-                    },
+        get: async (t = ttl) => (await coll).findOneAndUpdate(
+            Object.assign(
+                {expires: {$lte: after()}},
+                tries === null ? {} : {tries: {$lt: tries}},
+            ),
+            Object.assign(
+                {$set: {tag: id(), expires: after(t)}},
+                tries === null ? {} : {$inc: {tries: 1}},
+            ),
+            {
+                returnOriginal: false,
+                sort: {
+                    expires: insistent ? -1 : 1,
+                    created: 1,
                 },
-            );
-            return result.value;
-        },
-        ack: async tag => {
-            const result = await (await coll).findOneAndDelete({
+            },
+        ).then(result => result.value),
+        ack: async tag => (await coll).findOneAndDelete({
+            tag,
+            expires: {$gt: after()},
+        }).then(result => result.value ? `${result.value._id}` : result.value),
+        ping: async (tag, t = ttl) => (await coll).findOneAndUpdate(
+            {
                 tag,
                 expires: {$gt: after()},
-            });
-            return result.value ? `${result.value._id}` : result.value;
-        },
-        ping: async (tag, t = ttl) => {
-            const result = await (await coll).findOneAndUpdate(
-                {
-                    tag,
-                    expires: {$gt: after()},
-                },
-                {$set: {expires: after(t)}},
-                {returnOriginal: false},
-            );
-            return result.value;
-        },
+            },
+            {$set: {expires: after(t)}},
+            {returnOriginal: false},
+        ).then(result => result.value),
         total: async () => (await coll).count(),
         waiting: async () => (await coll).count(Object.assign(
             {expires: {$lte: after()}},
