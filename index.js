@@ -18,24 +18,24 @@ module.exports = (db, {
         if(!items.length) return null;
         return items;
     };
-    db = (async () => {
-        const _db = await db;
-        await _db.collection(name).createIndex({expires: 1, created: 1});
-        await _db.collection(name).createIndex({tag: 1}, {unique: true, sparse: true});
-        if(clean) await _db.collection(name).deleteMany({});
+    const coll = (async () => {
+        const coll = (await db).collection(name);
+        await coll.createIndex({expires: 1, created: 1});
+        await coll.createIndex({tag: 1}, {unique: true, sparse: true});
+        if(clean) await coll.deleteMany({});
         items = prepare(items);
-        if(items !== null) await _db.collection(name).insertMany(items);
-        return _db;
+        if(items !== null) await coll.insertMany(items);
+        return coll;
     })();
     return {
         add: async items => {
             items = prepare(items);
             if(items === null) return [];
-            const result = await (await db).collection(name).insertMany(items);
+            const result = await (await coll).insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
         get: async (t = ttl) => {
-            const result = await (await db).collection(name).findOneAndUpdate(
+            const result = await (await coll).findOneAndUpdate(
                 Object.assign(
                     {expires: {$lte: after()}},
                     tries === null ? {} : {tries: {$lt: tries}},
@@ -55,14 +55,14 @@ module.exports = (db, {
             return result.value;
         },
         ack: async tag => {
-            const result = await (await db).collection(name).findOneAndDelete({
+            const result = await (await coll).findOneAndDelete({
                 tag,
                 expires: {$gt: after()},
             });
             return result.value ? `${result.value._id}` : result.value;
         },
         ping: async (tag, t = ttl) => {
-            const result = await (await db).collection(name).findOneAndUpdate(
+            const result = await (await coll).findOneAndUpdate(
                 {
                     tag,
                     expires: {$gt: after()},
@@ -72,15 +72,15 @@ module.exports = (db, {
             );
             return result.value;
         },
-        total: async () => (await db).collection(name).count(),
-        waiting: async () => (await db).collection(name).count(Object.assign(
+        total: async () => (await coll).count(),
+        waiting: async () => (await coll).count(Object.assign(
             {expires: {$lte: after()}},
             tries === null ? {} : {tries: {$lt: tries}},
         )),
-        active: async () => (await db).collection(name).count(Object.assign(
+        active: async () => (await coll).count(Object.assign(
             {expires: {$gt: after()}},
             tries === null ? {} : {tries: {$lt: tries}},
         )),
-        failed: async () => (await db).collection(name).count({$or: [{tries: {$gte: tries}}, {tries: null}]}),
+        failed: async () => (await coll).count({$or: [{tries: {$gte: tries}}, {tries: null}]}),
     };
 };
