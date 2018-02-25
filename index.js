@@ -18,6 +18,7 @@ module.exports = (db, {
         if(!items.length) return null;
         return items;
     };
+
     const coll = (async () => {
         const coll = (await db).collection(name);
         await coll.createIndex({expires: 1, created: 1});
@@ -27,6 +28,7 @@ module.exports = (db, {
         if(items !== null) await coll.insertMany(items);
         return coll;
     })();
+
     return {
         add: async items => {
             items = prepare(items);
@@ -34,6 +36,7 @@ module.exports = (db, {
             const result = await (await coll).insertMany(items);
             return Object.values(result.insertedIds).map(id => `${id}`);
         },
+
         get: async (t = ttl) => (await coll).findOneAndUpdate(
             Object.assign(
                 {expires: {$lte: after()}},
@@ -51,10 +54,12 @@ module.exports = (db, {
                 },
             },
         ).then(result => result.value),
+
         ack: async tag => (await coll).findOneAndDelete({
             tag,
             expires: {$gt: after()},
         }).then(result => result.value ? `${result.value._id}` : result.value),
+
         ping: async (tag, t = ttl) => (await coll).findOneAndUpdate(
             {
                 tag,
@@ -63,15 +68,19 @@ module.exports = (db, {
             {$set: {expires: after(t)}},
             {returnOriginal: false},
         ).then(result => result.value),
+
         total: async () => (await coll).count(),
+
         waiting: async () => (await coll).count(Object.assign(
             {expires: {$lte: after()}},
             tries === null ? {} : {tries: {$lt: tries}},
         )),
+
         active: async () => (await coll).count(Object.assign(
             {expires: {$gt: after()}},
             tries === null ? {} : {tries: {$lt: tries}},
         )),
+
         failed: async () => (await coll).count({$or: [{tries: {$gte: tries}}, {tries: null}]}),
     };
 };
