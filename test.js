@@ -21,7 +21,6 @@ test.serial('add', async t => {
     const db = await DB;
     await db.collection('mq').remove({});
     const q = mq(DB);
-    t.is(await db.collection('mq').count(), 0);
     const result = await q.add('test');
     t.is(result.length, 1);
     t.is(typeof result[0], 'string');
@@ -36,7 +35,6 @@ test.serial('get', async t => {
     const db = await DB;
     await db.collection('mq').remove({});
     const q = mq(DB);
-    t.is(await db.collection('mq').count(), 0);
     await q.add('test1').then(delay(10));
     await q.add('test2').then(delay(10));
     await q.add('test3');
@@ -57,7 +55,6 @@ test.serial('ack', async t => {
     const db = await DB;
     await db.collection('mq').remove({});
     const q = mq(DB);
-    t.is(await db.collection('mq').count(), 0);
     await q.add('test');
     const msg1 = await q.get(1);
     t.is(msg1.data, 'test');
@@ -74,7 +71,6 @@ test.serial('ping', async t => {
     const db = await DB;
     await db.collection('mq').remove({});
     const q = mq(DB);
-    t.is(await db.collection('mq').count(), 0);
     await q.add('test');
     const msg = await q.get();
     t.is((await q.ping(msg.tag, 1)).data, 'test');
@@ -98,10 +94,10 @@ test.serial('tries', async t => {
     await db.collection('mq').remove({});
     const q = mq(DB, {tries: 1});
     await q.add('test');
-    t.is(await db.collection('mq').count(), 1);
     t.is((await q.get(100)).data, 'test');
     await delay(200);
     t.is(await q.get(100), null);
+    t.is(await db.collection('mq').count(), 1);
 });
 
 test.serial('ttl', async t => {
