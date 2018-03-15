@@ -82,5 +82,33 @@ module.exports = (db, {
             tries: {$gte: tries},
             expires: {$lte: after()},
         }),
+
+        stats: async () => {
+            const st = (await coll).aggregate([
+                {
+                    $group: {
+                        _id: {
+                            type: {
+                                $cond: [
+                                    {$gt: ['$expires', after()]},
+                                    'active',
+                                    tries === null ? 'waiting' :
+                                        {$cond: [{$gte: ['$tries', tries]}, 'failed', 'waiting']},
+                                ],
+                            },
+                        },
+                        count: {$sum: 1},
+                    },
+                },
+                {
+                    $project: {
+                        type: '$_id.type',
+                        count: 1,
+                        _id: 0,
+                    },
+                },
+            ]).toArray();
+            return Object.assign(...(await st).map(v => ({[v.type]: v.count})));
+        },
     };
 };
