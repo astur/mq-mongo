@@ -161,14 +161,17 @@ test.serial('size', async t => {
     t.is(await q.waiting(), 2);
     t.is(await q.active(), 0);
     t.is(await q.failed(), 0);
+    t.deepEqual(await q.stats(), {waiting: 2});
     const msg1 = await q.get();
     t.is(await q.waiting(), 1);
     t.is(await q.active(), 1);
     t.is(await q.failed(), 0);
+    t.deepEqual(await q.stats(), {active: 1, waiting: 1});
     await q.ping(msg1.tag, 1).then(delay(10));
     t.is(await q.waiting(), 1);
     t.is(await q.active(), 0);
     t.is(await q.failed(), 1);
+    t.deepEqual(await q.stats(), {failed: 1, waiting: 1});
     const msg2 = await q.get();
     await q.ack(msg2.tag);
     t.is(await q.total(), 1);
