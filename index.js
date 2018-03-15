@@ -76,11 +76,11 @@ module.exports = (db, {
             tries === null ? {} : {tries: {$lt: tries}},
         )),
 
-        active: async () => (await coll).count(Object.assign(
-            {expires: {$gt: after()}},
-            tries === null ? {} : {tries: {$lt: tries}},
-        )),
+        active: async () => (await coll).count({expires: {$gt: after()}}),
 
-        failed: async () => (await coll).count({$or: [{tries: {$gte: tries}}, {tries: null}]}),
+        failed: async () => tries === null ? 0 : (await coll).count({
+            tries: {$gte: tries},
+            expires: {$lte: after()},
+        }),
     };
 };
