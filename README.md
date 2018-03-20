@@ -40,6 +40,7 @@ q.get().then(msg => {/* Do something */});
 * __`q.active()`__ - returns quantity of messages in work (waiting for ack).
 * __`q.failed()`__ - returns quantity of failed messages (all tries is over).
 * __`q.total()`__ - returns total quantity of messages (sum of three above).
+* __`q.stats()`__ - returns object with quantities of waiting, active and failed messages.
 
 #### message fields
 
