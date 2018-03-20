@@ -155,6 +155,7 @@ test.serial('size', async t => {
     const coll = (await DB).collection('mq');
     await coll.remove({});
     const q = mq(DB, {tries: 1});
+    t.deepEqual(await q.stats(), {active: 0, failed: 0, waiting: 0});
     await q.add(Array(9).fill(''));
     await q.get(1).then(delay(10));
     await q.get(1).then(delay(10));
