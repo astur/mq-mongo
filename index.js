@@ -108,7 +108,14 @@ module.exports = (db, {
                     },
                 },
             ]).toArray();
-            return Object.assign(...(await st).map(v => ({[v.type]: v.count})));
+            return Object.assign(
+                {
+                    active: 0,
+                    waiting: 0,
+                    failed: 0,
+                },
+                ...(await st).map(v => ({[v.type]: v.count})),
+            );
         },
     };
 };
