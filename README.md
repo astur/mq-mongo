@@ -41,6 +41,7 @@ q.get().then(msg => {/* Do something */});
 * __`q.failed()`__ - returns quantity of failed messages (all tries is over).
 * __`q.total()`__ - returns total quantity of messages (sum of three above).
 * __`q.stats()`__ - returns object with quantities of waiting, active and failed messages.
+* __`q.options()`__ - getter, returns object with some options (`{ttl, tries, insistent}`).
 
 #### message fields
 
