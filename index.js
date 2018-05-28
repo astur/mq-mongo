@@ -117,5 +117,9 @@ module.exports = (db, {
                 ...(await st).map(v => ({[v.type]: v.count})),
             );
         },
+
+        get options(){
+            return {ttl, tries, insistent};
+        },
     };
 };
