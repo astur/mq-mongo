@@ -177,6 +177,13 @@ test.serial('init items', async t => {
     t.is(await q.waiting(), 2);
 });
 
+test.serial('queue options', async t => {
+    const coll = (await DB).collection('mq');
+    await coll.remove({});
+    const q = mq(DB);
+    t.deepEqual(q.options, {ttl: 30000, tries: 10, insistent: false});
+});
+
 test.after(async t => {
     const db = await DB;
     await db.dropCollection('mq');
