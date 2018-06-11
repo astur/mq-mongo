@@ -1,6 +1,3 @@
 {
-    "extends": "astur",
-    "rules": {
-        "no-console": 0
-    }
+    "extends": "astur"
 }
