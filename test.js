@@ -75,7 +75,7 @@ test.serial('ping', async t => {
     const msg = await q.get();
     t.is((await q.ping(msg.tag, 1)).data, 'test');
     await delay(100);
-    t.is(await q.ping(msg.tag, 1), null);
+    t.is(await q.ping(msg.tag), null);
 });
 
 test.serial('name', async t => {
@@ -151,7 +151,7 @@ test.serial('insistent', async t => {
     t.is((await q.get(1)).data, 'test1');
 });
 
-test.serial('size', async t => {
+test.serial('size tries', async t => {
     const coll = db.collection('mq');
     await coll.remove({});
     const q = mq(db, {tries: 1});
@@ -167,6 +167,24 @@ test.serial('size', async t => {
     t.is(await q.waiting(), 4);
     t.is(await q.active(), 2);
     t.is(await q.failed(), 3);
+});
+
+test.serial('size no-tries', async t => {
+    const coll = db.collection('mq');
+    await coll.remove({});
+    const q = mq(db, {tries: null});
+    t.deepEqual(await q.stats(), {active: 0, failed: 0, waiting: 0});
+    await q.add(Array(9).fill(''));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get(1).then(delay(10));
+    await q.get();
+    await q.get();
+    t.deepEqual(await q.stats(), {active: 2, failed: 0, waiting: 7});
+    t.is(await q.total(), 9);
+    t.is(await q.waiting(), 7);
+    t.is(await q.active(), 2);
+    t.is(await q.failed(), 0);
 });
 
 test.serial('init items', async t => {
