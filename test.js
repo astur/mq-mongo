@@ -202,6 +202,17 @@ test.serial('queue options', async t => {
     t.deepEqual(q.options, {ttl: 30000, tries: 10, insistent: false});
 });
 
+test.serial('get strict', async t => {
+    const coll = db.collection('mq');
+    await coll.remove({});
+    const q = mq(db, {strict: true});
+    await q.add('test');
+    await q.get();
+    const e = await t.throws(q.get());
+    t.deepEqual(e.stats, {active: 1, failed: 0, waiting: 0});
+    t.is(e.name, 'QueueGetError');
+});
+
 test.after(async t => {
     await db.dropCollection('mq');
     await db.dropCollection('named');
