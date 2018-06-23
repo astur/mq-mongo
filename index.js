@@ -5,6 +5,7 @@ module.exports = (db, {
     clean = false,
     insistent = false,
     items = null,
+    strict = false,
 } = {}) => {
     const after = (ttl = 0) => Date.now() + ttl;
     const id = () => require('crypto').randomBytes(16).toString('hex');
@@ -101,7 +102,15 @@ module.exports = (db, {
                 created: 1,
             },
         },
-    ).then(result => result.value);
+    ).then(async result => {
+        if(strict && result.value === null){
+            const e = new Error('Unable to get task from queue');
+            e.stats = await stats();
+            e.name = 'QueueGetError';
+            throw e;
+        }
+        return result.value;
+    });
 
     const ack = async tag => (await coll).findOneAndDelete({
         tag,
