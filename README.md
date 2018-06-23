@@ -27,13 +27,14 @@ q.get().then(msg => {/* Do something */});
 * __`options.ttl`__ - time-to-live (ms) for taken message before it will be acked or returned to queue. Defaults to 30000.
 * __`options.tries`__ - just how many times single message may be taken and returned to queue without ack. Defaults to 10.
 * __`options.clean`__ - if `true` previous messages in this queue (in fact documents in collection) will be deleted. Defaults to `false`.
+* __`options.strict`__ - if `true` method `get` will work in strict mode (throws error instead of returning `null`). Defaults to `false`.
 * __`options.insistent`__ - if `true` then `get` will begins from last failed (returned to queue without ack) messages. If `false` then `get` follow 'FIFO' rule.
 * __`options.items`__ - message or array of messages for adding to queue on start.
 
 #### methods (all asinc)
 
 * __`q.add(something)`__ - adds single message or array of messages to queue. Returns array of `_id` strings for added messages.
-* __`q.get(ttl)`__ - gets message from queue. Optional parameter is individual `ttl` for that specific message. Returns message object or `null` (if no messages ready).
+* __`q.get(ttl)`__ - gets message from queue. Optional parameter is individual `ttl` for that specific message. Returns message object if there is messages ready. If no waiting messages returns `null` or (if `options.strict` set to `true`) throws error.
 * __`q.ack(tag)`__ - deletes successfully handled message (specified by tag field) from queue. Returns `_id` string of deleted message or null (if no message with such tag or if ttl expires).
 * __`q.ping(tag, ttl)`__ - prolong ttl of message specified by tag field. Optional parameter `ttl` defaults to `options.ttl` of queue.
 * __`q.waiting()`__ - returns quantity of messages in queue.
