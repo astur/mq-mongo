@@ -127,6 +127,7 @@ test.serial('null-tries', async t => {
     await q.get(1).then(delay(10));
     await q.get(1).then(delay(10));
     await q.get(1).then(delay(10));
+    await delay(50);
     t.is((await q.get(1).then(delay(10))).tries, undefined);
     t.is((await q.get(1).then(delay(10))).data, 'test');
 });
