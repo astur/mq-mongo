@@ -29,94 +29,104 @@ module.exports = (db, {
         return coll;
     })();
 
-    return {
-        add: async items => {
-            items = prepare(items);
-            if(items === null) return [];
-            const result = await (await coll).insertMany(items);
-            return Object.values(result.insertedIds).map(id => `${id}`);
-        },
+    const total = async () => (await coll).count();
 
-        get: async (t = ttl) => (await coll).findOneAndUpdate(
-            Object.assign(
-                {expires: {$lte: after()}},
-                tries === null ? {} : {tries: {$lt: tries}},
-            ),
-            Object.assign(
-                {$set: {tag: id(), expires: after(t)}},
-                tries === null ? {} : {$inc: {tries: 1}},
-            ),
+    const waiting = async () => (await coll).count(Object.assign(
+        {expires: {$lte: after()}},
+        tries === null ? {} : {tries: {$lt: tries}},
+    ));
+
+    const active = async () => (await coll).count({expires: {$gt: after()}});
+
+    const failed = async () => tries === null ? 0 : (await coll).count({
+        tries: {$gte: tries},
+        expires: {$lte: after()},
+    });
+
+    const stats = async () => {
+        const st = (await coll).aggregate([
             {
-                returnOriginal: false,
-                sort: {
-                    expires: insistent ? -1 : 1,
-                    created: 1,
+                $group: {
+                    _id: {
+                        type: {
+                            $cond: [
+                                {$gt: ['$expires', after()]},
+                                'active',
+                                tries === null ? 'waiting' :
+                                    {$cond: [{$gte: ['$tries', tries]}, 'failed', 'waiting']},
+                            ],
+                        },
+                    },
+                    count: {$sum: 1},
                 },
             },
-        ).then(result => result.value),
-
-        ack: async tag => (await coll).findOneAndDelete({
-            tag,
-            expires: {$gt: after()},
-        }).then(result => result.value ? `${result.value._id}` : result.value),
-
-        ping: async (tag, t = ttl) => (await coll).findOneAndUpdate(
             {
-                tag,
-                expires: {$gt: after()},
+                $project: {
+                    type: '$_id.type',
+                    count: 1,
+                    _id: 0,
+                },
             },
-            {$set: {expires: after(t)}},
-            {returnOriginal: false},
-        ).then(result => result.value),
+        ]).toArray();
+        return Object.assign(
+            {
+                active: 0,
+                waiting: 0,
+                failed: 0,
+            },
+            ...(await st).map(v => ({[v.type]: v.count})),
+        );
+    };
 
-        total: async () => (await coll).count(),
+    const add = async items => {
+        items = prepare(items);
+        if(items === null) return [];
+        const result = await (await coll).insertMany(items);
+        return Object.values(result.insertedIds).map(id => `${id}`);
+    };
 
-        waiting: async () => (await coll).count(Object.assign(
+    const get = async (t = ttl) => (await coll).findOneAndUpdate(
+        Object.assign(
             {expires: {$lte: after()}},
             tries === null ? {} : {tries: {$lt: tries}},
-        )),
-
-        active: async () => (await coll).count({expires: {$gt: after()}}),
-
-        failed: async () => tries === null ? 0 : (await coll).count({
-            tries: {$gte: tries},
-            expires: {$lte: after()},
-        }),
-
-        stats: async () => {
-            const st = (await coll).aggregate([
-                {
-                    $group: {
-                        _id: {
-                            type: {
-                                $cond: [
-                                    {$gt: ['$expires', after()]},
-                                    'active',
-                                    tries === null ? 'waiting' :
-                                        {$cond: [{$gte: ['$tries', tries]}, 'failed', 'waiting']},
-                                ],
-                            },
-                        },
-                        count: {$sum: 1},
-                    },
-                },
-                {
-                    $project: {
-                        type: '$_id.type',
-                        count: 1,
-                        _id: 0,
-                    },
-                },
-            ]).toArray();
-            return Object.assign(
-                {
-                    active: 0,
-                    waiting: 0,
-                    failed: 0,
-                },
-                ...(await st).map(v => ({[v.type]: v.count})),
-            );
+        ),
+        Object.assign(
+            {$set: {tag: id(), expires: after(t)}},
+            tries === null ? {} : {$inc: {tries: 1}},
+        ),
+        {
+            returnOriginal: false,
+            sort: {
+                expires: insistent ? -1 : 1,
+                created: 1,
+            },
         },
+    ).then(result => result.value);
+
+    const ack = async tag => (await coll).findOneAndDelete({
+        tag,
+        expires: {$gt: after()},
+    }).then(result => result.value ? `${result.value._id}` : result.value);
+
+    const ping = async (tag, t = ttl) => (await coll).findOneAndUpdate(
+        {
+            tag,
+            expires: {$gt: after()},
+        },
+        {$set: {expires: after(t)}},
+        {returnOriginal: false},
+    ).then(result => result.value);
+
+    return {
+        add,
+        get,
+        ack,
+        ping,
+        total,
+        waiting,
+        active,
+        failed,
+        stats,
 
         get options(){
             return {ttl, tries, insistent};
