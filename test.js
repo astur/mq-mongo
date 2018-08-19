@@ -6,7 +6,7 @@ const mongo = require('mongodb').MongoClient;
 const mongoString = process.env.MONGO_URI ||
     'mongodb://localhost:27017/test';
 
-let db;
+let db = null;
 
 test.before(async t => {
     db = await mongo.connect(mongoString)
