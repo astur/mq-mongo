@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 module.exports = (db, {
     name = 'mq',
     ttl = 30000,
@@ -8,16 +10,16 @@ module.exports = (db, {
     strict = false,
 } = {}) => {
     const after = (ttl = 0) => Date.now() + ttl;
-    const id = () => require('crypto').randomBytes(16).toString('hex');
+    const id = () => crypto.randomBytes(16).toString('hex');
     const prepare = items => {
         if([null, undefined].includes(items)) return null;
-        items = (Array.isArray(items) ? items : [items])
+        const prepared = (Array.isArray(items) ? items : [items])
             .map(item => Object.assign(
                 {data: item, created: after(), expires: 0},
                 tries === null ? {} : {tries: 0},
             ));
-        if(!items.length) return null;
-        return items;
+        if(prepared.length === 0) return null;
+        return prepared;
     };
 
     const coll = (async () => {
@@ -25,8 +27,8 @@ module.exports = (db, {
         await coll.createIndex({expires: 1, created: 1});
         await coll.createIndex({tag: 1}, {unique: true, sparse: true});
         if(clean) await coll.deleteMany({});
-        items = prepare(items);
-        if(items !== null) await coll.insertMany(items);
+        const prepared = prepare(items);
+        if(prepared !== null) await coll.insertMany(prepared);
         return coll;
     })();
 
@@ -80,9 +82,9 @@ module.exports = (db, {
     };
 
     const add = async items => {
-        items = prepare(items);
-        if(items === null) return [];
-        const result = await (await coll).insertMany(items);
+        const prepared = prepare(items);
+        if(prepared === null) return [];
+        const result = await (await coll).insertMany(prepared);
         return Object.values(result.insertedIds).map(id => `${id}`);
     };
 
