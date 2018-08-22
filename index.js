@@ -32,16 +32,16 @@ module.exports = (db, {
         return coll;
     })();
 
-    const total = async () => (await coll).count();
+    const total = async () => (await coll).countDocuments();
 
-    const waiting = async () => (await coll).count(Object.assign(
+    const waiting = async () => (await coll).countDocuments(Object.assign(
         {expires: {$lte: after()}},
         tries === null ? {} : {tries: {$lt: tries}},
     ));
 
-    const active = async () => (await coll).count({expires: {$gt: after()}});
+    const active = async () => (await coll).countDocuments({expires: {$gt: after()}});
 
-    const failed = async () => tries === null ? 0 : (await coll).count({
+    const failed = async () => tries === null ? 0 : (await coll).countDocuments({
         tries: {$gte: tries},
         expires: {$lte: after()},
     });
